@@ -20,13 +20,13 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
     <section className="px-6 py-20 sm:py-28">
       <SectionTitle eyebrow="Captured moments" title="Our Gallery" className="mb-12" />
 
-      <div className="mx-auto grid max-w-5xl auto-rows-[150px] grid-cols-2 gap-3 sm:auto-rows-[200px] sm:grid-cols-3 sm:gap-4">
+      <div className="gallery3d mx-auto grid max-w-5xl auto-rows-[150px] grid-cols-2 gap-3 sm:auto-rows-[200px] sm:grid-cols-3 sm:gap-4">
         {items.map((item, i) => (
           <button
             key={`${item.url}-${i}`}
             onClick={() => setOpen(i)}
             aria-label={item.caption ?? `Open photo ${i + 1}`}
-            className={`reveal group relative overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] ${
+            className={`gallery3d-tile reveal group relative overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] ${
               i % 5 === 0 ? "row-span-2" : ""
             }`}
           >

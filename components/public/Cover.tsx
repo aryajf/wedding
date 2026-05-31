@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { WeddingSettings } from "@/lib/types";
 import { formatEventDate } from "@/lib/utils";
-import { RingsMark, Divider, CornerFlourish } from "./Ornaments";
+import { Divider, CornerFlourish } from "./Ornaments";
+import { enableGyro, subscribeGyro } from "@/lib/gyro";
 
 /**
  * Full-screen "envelope" intro shown before the invitation. Tapping "Open"
@@ -20,41 +21,76 @@ export function Cover({
 }) {
   const [leaving, setLeaving] = useState(false);
   const dateLabel = formatEventDate(settings.event_date);
+  const bgRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Subtle parallax: background drifts opposite the content as the cursor
+  // moves or the phone tilts, giving the cover physical depth.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const move = (x: number, y: number) => {
+      if (bgRef.current)
+        bgRef.current.style.transform = `scale(1.08) translate(${x * -16}px, ${y * -16}px)`;
+      if (contentRef.current)
+        contentRef.current.style.transform = `translate(${x * 11}px, ${y * 9}px)`;
+    };
+    return subscribeGyro(({ beta, gamma }) => {
+      const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+      move(clamp(gamma / 28), clamp((beta - 45) / 28));
+    });
+  }, []);
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const x = (e.clientX / window.innerWidth - 0.5) * 2;
+    const y = (e.clientY / window.innerHeight - 0.5) * 2;
+    if (bgRef.current)
+      bgRef.current.style.transform = `scale(1.08) translate(${x * -16}px, ${y * -16}px)`;
+    if (contentRef.current)
+      contentRef.current.style.transform = `translate(${x * 11}px, ${y * 9}px)`;
+  }
 
   function handleOpen() {
+    enableGyro(); // gesture → unlock device tilt for the cards beneath
     setLeaving(true);
-    setTimeout(onOpen, 750);
+    setTimeout(onOpen, 850);
   }
 
   return (
     <div
+      onPointerMove={onPointerMove}
       style={{ color: settings.text_color }}
-      className={`fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden px-6 text-center transition-all duration-700 ease-in-out ${
-        leaving ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
+      className={`fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden px-6 text-center transition-all duration-[850ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        leaving ? "cover-leaving" : "opacity-100"
       }`}
     >
-      {/* Background image or tinted gradient */}
-      {settings.hero_image_url ? (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={settings.hero_image_url}
-            alt=""
-            className="absolute inset-0 h-full w-full scale-105 object-cover"
-          />
+      {/* Background image or tinted gradient (parallax layer) */}
+      <div
+        ref={bgRef}
+        className="absolute inset-0 transition-transform duration-300 ease-out will-change-transform"
+      >
+        {settings.hero_image_url ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={settings.hero_image_url}
+              alt=""
+              className="absolute inset-0 h-full w-full scale-105 object-cover"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(to bottom, ${settings.background_color}cc, ${settings.background_color}f2)`,
+              }}
+            />
+          </>
+        ) : (
           <div
             className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to bottom, ${settings.background_color}cc, ${settings.background_color}f2)`,
-            }}
+            style={{ background: settings.background_color }}
           />
-        </>
-      ) : (
-        <div
-          className="absolute inset-0"
-          style={{ background: settings.background_color }}
-        />
-      )}
+        )}
+      </div>
 
       {/* Corner flourishes */}
       <span
@@ -82,14 +118,10 @@ export function Cover({
         <CornerFlourish />
       </span>
 
-      <div className="relative z-10 flex flex-col items-center">
-        <span
-          className="animate-float"
-          style={{ color: settings.accent_color }}
-        >
-          <RingsMark size={64} />
-        </span>
-
+      <div
+        ref={contentRef}
+        className="relative z-10 flex flex-col items-center transition-transform duration-300 ease-out will-change-transform"
+      >
         <p
           className="mt-7 text-xs uppercase tracking-[0.45em]"
           style={{ color: settings.accent_color }}

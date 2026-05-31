@@ -187,6 +187,121 @@ body.cover-open {
   border-radius: 9999px;
 }
 
+/* ─── 3D & depth ──────────────────────────────────────────────────
+   Pointer/gyroscope-driven tilt, spinning ring monogram, countdown
+   digit flip, and a check-in confetti burst. All CSS transforms (no
+   WebGL) so the public page stays light on phones. Every effect is
+   neutralised by prefers-reduced-motion at the bottom of this block. */
+
+/* Interactive tilt card — transform is written by Tilt.tsx. */
+.tilt-wrap { perspective: 900px; }
+.tilt-inner {
+  transform: perspective(900px) rotateX(0) rotateY(0) scale(1);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+/* Soft specular highlight that tracks the cursor across a tilt card. */
+.tilt-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--glare-x, 50%) var(--glare-y, 50%),
+    color-mix(in srgb, white 38%, transparent),
+    transparent 55%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  mix-blend-mode: soft-light;
+}
+.tilt-wrap:hover .tilt-glare { opacity: 1; }
+
+/* Spinning interlocking 3D wedding rings (RingsMark3D). The two hoops
+   orbit on Y out of phase so they read as solid bands catching light. */
+.rings3d { position: relative; display: inline-grid; place-items: center; }
+.rings3d > span {
+  position: absolute;
+  border-style: solid;
+  border-color: currentColor;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0.5em -0.2em color-mix(in srgb, currentColor 70%, transparent),
+    inset 0 0 0.4em -0.2em color-mix(in srgb, white 60%, transparent);
+  transform-style: preserve-3d;
+  animation: ring-orbit 7s linear infinite;
+}
+.rings3d > span:nth-child(1) { animation-delay: -1.6s; }
+.rings3d > span:nth-child(2) { animation-delay: -3.6s; }
+@keyframes ring-orbit { to { transform: rotateY(360deg); } }
+
+/* Countdown digit flip-in: re-keyed span replays this on every change.
+   Parent supplies the perspective via .flip-perspective. */
+.flip-perspective { perspective: 520px; }
+.flip-digit {
+  display: inline-block;
+  transform-origin: center bottom;
+  backface-visibility: hidden;
+  animation: flip-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes flip-in {
+  0% { transform: rotateX(-88deg); opacity: 0; }
+  55% { opacity: 1; }
+  100% { transform: rotateX(0); opacity: 1; }
+}
+
+/* Gallery tile depth pop (CSS-only, no tracking). */
+.gallery3d { perspective: 800px; }
+.gallery3d-tile {
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+}
+.gallery3d-tile:hover {
+  transform: translateZ(36px) scale(1.03);
+  box-shadow: 0 30px 50px -22px color-mix(in oklab, var(--text) 70%, transparent);
+  z-index: 2;
+}
+
+/* Cover envelope lift-away on open. */
+.cover-leaving {
+  transform: perspective(1300px) rotateX(26deg) translateY(-64%) scale(0.92);
+  opacity: 0;
+}
+
+/* Check-in confetti burst (WelcomeScreen). Offsets set inline per piece. */
+.confetti-piece {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 0.6rem;
+  height: 0.95rem;
+  border-radius: 2px;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: confetti-burst 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes confetti-burst {
+  0% { transform: translate(0, 0) rotateX(0) rotateY(0) scale(0.3); opacity: 0; }
+  12% { opacity: 1; }
+  100% {
+    transform: translate(var(--cx, 0), var(--cy, 45vh))
+      rotateX(var(--crx, 720deg)) rotateY(var(--cry, 540deg)) scale(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt-inner,
+  .gallery3d-tile { transition: none !important; transform: none !important; }
+  .tilt-glare { display: none !important; }
+  .rings3d > span,
+  .flip-digit { animation: none !important; }
+  .cover-leaving { transform: translateY(-100%) !important; }
+  .confetti-piece { display: none !important; }
+}
+
 /* Guestbook scroll area: thumb uses the themeable progress color, with a
    matching gradient so it echoes the top progress bar. */
 .progress-scroll {

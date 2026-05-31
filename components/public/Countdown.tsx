@@ -32,19 +32,26 @@ export function Countdown({ date }: { date: string }) {
 
   return (
     <div className="flex flex-wrap justify-center gap-3 sm:gap-5">
-      {units.map(([label, value]) => (
-        <div
-          key={label}
-          className="flex min-w-[70px] flex-col items-center rounded-2xl bg-white/70 px-4 py-4 shadow-md ring-1 ring-black/5 backdrop-blur-sm transition-transform hover:-translate-y-1 sm:min-w-[92px]"
-        >
-          <span className="font-serif text-5xl tabular-nums text-[color:var(--heading)] sm:text-6xl">
-            {String(value).padStart(2, "0")}
-          </span>
-          <span className="mt-2 text-xs uppercase tracking-[0.25em] text-[color:var(--accent)] sm:text-sm">
-            {label}
-          </span>
-        </div>
-      ))}
+      {units.map(([label, value]) => {
+        const padded = String(value).padStart(2, "0");
+        return (
+          <div
+            key={label}
+            className="flip-perspective flex min-w-[70px] flex-col items-center rounded-2xl bg-white/70 px-4 py-4 shadow-md ring-1 ring-black/5 backdrop-blur-sm transition-transform hover:-translate-y-1 sm:min-w-[92px]"
+          >
+            {/* Re-keying on the value replays the 3D flip-in each tick. */}
+            <span
+              key={padded}
+              className="flip-digit font-serif text-5xl tabular-nums text-[color:var(--heading)] sm:text-6xl"
+            >
+              {padded}
+            </span>
+            <span className="mt-2 text-xs uppercase tracking-[0.25em] text-[color:var(--accent)] sm:text-sm">
+              {label}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
