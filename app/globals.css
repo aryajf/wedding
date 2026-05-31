@@ -1,26 +1,205 @@
 @import "tailwindcss";
 
+/* Design tokens. The public page overrides these at runtime via inline styles
+   fed from the database (see themeToCssVars). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f7e1cd;
+  --text: #4a3b2f;
+  --heading: #7d5a3c;
+  --accent: #c08552;
+  --progress: #c08552;
+  --selection: #fff8ef;
+  --selection-bg: #c08552;
+  --font: var(--font-montserrat), system-ui, sans-serif;
+  --font-heading: var(--font-cormorant), Georgia, serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-text: var(--text);
+  --color-heading: var(--heading);
+  --color-accent: var(--accent);
+  /* `font-serif` (used on every heading) follows the chosen display font;
+     `font-sans` follows the chosen body font. Both set by themeToCssVars. */
+  --font-serif: var(--font-heading);
+  --font-sans: var(--font);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Larger comfortable base; section type scales up from here. */
+  font-size: 17px;
+  scrollbar-width: none; /* Firefox: hide native scrollbar */
+}
+@media (min-width: 640px) {
+  html { font-size: 18px; }
+}
+/* Hide the native scrollbar (replaced by the top progress bar). */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+}
+
+/* Themeable text selection. */
+::selection {
+  color: var(--selection);
+  background: var(--selection-bg);
+}
+
+/* Disables page scrolling while the opening cover overlays the invitation. */
+body.cover-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Hide content that GSAP will reveal, but only when JS/GSAP is active. */
+.gsap-ready .reveal {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gsap-ready .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Subtle floating animation for decorative elements. */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  display: inline-block;
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Drifting wheel inside the hero scroll-cue "mouse". */
+@keyframes scroll-wheel {
+  0% { transform: translateY(0); opacity: 0; }
+  25% { opacity: 1; }
+  60% { transform: translateY(9px); opacity: 0; }
+  100% { transform: translateY(9px); opacity: 0; }
+}
+.animate-scroll-wheel {
+  animation: scroll-wheel 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* Gentle shimmer for the cover's "Open" button glow. */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  50% { box-shadow: 0 0 0 16px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2.4s ease-out infinite;
+}
+
+/* Soft sheen that sweeps across cards on hover. */
+@keyframes sheen {
+  0% { transform: translateX(-120%) skewX(-12deg); }
+  100% { transform: translateX(220%) skewX(-12deg); }
+}
+
+/* Card affordance: a warm raised surface with a hairline gradient border and
+   a hover lift. Not a flat static box. */
+.card-lux {
+  position: relative;
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(
+      150deg,
+      color-mix(in oklab, white 86%, var(--bg)) 0%,
+      color-mix(in oklab, white 70%, var(--bg)) 100%
+    );
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 60%, transparent) inset,
+    0 18px 40px -24px color-mix(in oklab, var(--text) 55%, transparent);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+.card-lux::before {
+  /* hairline gradient ring */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    150deg,
+    color-mix(in oklab, var(--accent) 55%, transparent),
+    transparent 45%,
+    color-mix(in oklab, var(--accent) 25%, transparent)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.card-lux:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 70%, transparent) inset,
+    0 30px 60px -28px color-mix(in oklab, var(--text) 60%, transparent);
+}
+
+/* Paper-like grain laid over the warm background for depth. */
+.bg-grain { position: relative; }
+.bg-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in srgb, var(--text) 9%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 22px 22px;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
+
+/* Thin elegant scrollbar for inner scroll areas (preview, etc.). */
+.thin-scroll { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--accent) 55%, transparent) transparent; }
+.thin-scroll::-webkit-scrollbar { width: 6px; }
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 9999px;
+}
+
+/* Guestbook scroll area: thumb uses the themeable progress color, with a
+   matching gradient so it echoes the top progress bar. */
+.progress-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--progress) transparent;
+}
+.progress-scroll::-webkit-scrollbar { width: 7px; }
+.progress-scroll::-webkit-scrollbar-track { background: transparent; }
+.progress-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--progress) 70%, white) 0%,
+    var(--progress) 100%
+  );
+  border-radius: 9999px;
 }

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" role="img" aria-label="BCA">
+  <rect width="200" height="120" rx="18" fill="#ffffff"/>
+  <rect x="8" y="8" width="184" height="104" rx="12" fill="#0060af"/>
+  <text x="100" y="78" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="54" letter-spacing="2" fill="#ffffff">BCA</text>
+</svg>
